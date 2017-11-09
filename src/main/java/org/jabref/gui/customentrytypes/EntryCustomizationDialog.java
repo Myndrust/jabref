@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,11 +66,11 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
     private JButton apply;
     private final List<String> preset = InternalBibtexFields.getAllPublicFieldNames();
     private String lastSelected;
-    private final Map<String, Set<String>> reqLists = new HashMap<>();
-    private final Map<String, Set<String>> optLists = new HashMap<>();
-    private final Map<String, Set<String>> opt2Lists = new HashMap<>();
-    private final Set<String> defaulted = new HashSet<>();
-    private final Set<String> changed = new HashSet<>();
+    private final Map<String, LinkedHashSet<String>> reqLists = new HashMap<>();
+    private final Map<String, LinkedHashSet<String>> optLists = new HashMap<>();
+    private final Map<String, LinkedHashSet<String>> opt2Lists = new HashMap<>();
+    private final Set<String> defaulted = new LinkedHashSet<>();
+    private final Set<String> changed = new LinkedHashSet<>();
 
     private boolean biblatexMode;
     private BibDatabaseMode bibDatabaseMode;
@@ -187,10 +187,10 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
         if (lastSelected != null) {
             // The entry type lastSelected is now unselected, so we store the current settings
             // for that type in our two maps.
-            reqLists.put(lastSelected, reqComp.getFields());
-            optLists.put(lastSelected, optComp.getFields());
+            reqLists.put(lastSelected, new LinkedHashSet(reqComp.getFields()));
+            optLists.put(lastSelected, new LinkedHashSet(optComp.getFields()));
             if (biblatexMode) {
-                opt2Lists.put(lastSelected, optComp2.getFields());
+                opt2Lists.put(lastSelected, new LinkedHashSet(optComp2.getFields()));
             }
         }
 
@@ -221,12 +221,12 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
                 optComp.setEnabled(true);
             } else {
                 // New entry
-                reqComp.setFields(new HashSet<>());
+                reqComp.setFields(new LinkedHashSet<>());
                 reqComp.setEnabled(true);
-                optComp.setFields(new HashSet<>());
+                optComp.setFields(new LinkedHashSet<>());
                 optComp.setEnabled(true);
                 if (biblatexMode) {
-                    optComp2.setFields(new HashSet<>());
+                    optComp2.setFields(new LinkedHashSet<>());
                     optComp2.setEnabled(true);
                 }
                 reqComp.requestFocus();
@@ -250,7 +250,7 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
 
         // Iterate over our map of required fields, and list those types if necessary:
         Set<String> types = typeComp.getFields();
-        for (Map.Entry<String, Set<String>> stringListEntry : reqLists.entrySet()) {
+        for (Map.Entry<String, LinkedHashSet<String>> stringListEntry : reqLists.entrySet()) {
             if (!types.contains(stringListEntry.getKey())) {
                 continue;
             }
@@ -260,7 +260,7 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
             Set<String> secondaryOptionalFieldsLists = opt2Lists.get(stringListEntry.getKey());
 
             if (secondaryOptionalFieldsLists == null) {
-                secondaryOptionalFieldsLists = new HashSet<>(0);
+                secondaryOptionalFieldsLists = new LinkedHashSet<>(0);
             }
 
             // If this type is already existing, check if any changes have
@@ -307,7 +307,7 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
             updateEntriesForChangedTypes(actuallyChangedTypes);
         }
 
-        Set<String> typesToRemove = new HashSet<>();
+        Set<String> typesToRemove = new LinkedHashSet<>();
         for (String existingType : EntryTypes.getAllTypes(bibDatabaseMode)) {
             if (!types.contains(existingType)) {
                 typesToRemove.add(existingType);
@@ -385,8 +385,8 @@ public class EntryCustomizationDialog extends JabRefDialog implements ListSelect
             if (type.isPresent()) {
                 Set<String> of = type.get().getOptionalFields();
                 Set<String> req = type.get().getRequiredFields();
-                Set<String> opt1 = new HashSet<>();
-                Set<String> opt2 = new HashSet<>();
+                Set<String> opt1 = new LinkedHashSet<>();
+                Set<String> opt2 = new LinkedHashSet<>();
 
                 if (!(of.isEmpty())) {
                     if (biblatexMode) {
